@@ -13,10 +13,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Print Docker user
+      - shell: bash
         env:
-          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-        run: echo "Docker user is $DOCKER_USER"
+          SUPER_SECRET: ${{ secrets.SuperSecret }}
+        run: |
+             echo "$SUPER_SECRET" # this line, log your SUPER_SECRET
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
