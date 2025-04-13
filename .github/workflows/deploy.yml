@@ -13,11 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Mostrar secreto (por pruebas)
-        env:
-          SUPER_SECRET: ${{ secrets.SUPER_SECRET }}
-        run: echo "$SUPER_SECRET"
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
