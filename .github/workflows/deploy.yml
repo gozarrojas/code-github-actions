@@ -85,10 +85,23 @@ jobs:
               AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
               AWS_REGION: us-east-1
 
-      - name: Create ECS Cluster (if not exists)
+      - name: Create ECS Cluster (force recreation if inactive)
         run: |
-          aws ecs describe-clusters --clusters fastapi-cluster --region us-east-1 || \
-          aws ecs create-cluster --cluster-name fastapi-cluster --region us-east-1
+          CLUSTER_STATUS=$(aws ecs describe-clusters \
+            --clusters fastapi-cluster \
+            --region us-east-1 \
+            --query "clusters[0].status" \
+            --output text 2>/dev/null || echo "MISSING")
+
+          if [[ "$CLUSTER_STATUS" == "INACTIVE" || "$CLUSTER_STATUS" == "MISSING" ]]; then
+            echo "🧨 Cluster inactivo o no existe. Eliminando y recreando..."
+            aws ecs delete-cluster --cluster fastapi-cluster --region us-east-1 || true
+            sleep 5
+            aws ecs create-cluster --cluster-name fastapi-cluster --region us-east-1
+            echo "✅ Cluster recreado."
+          else
+            echo "✅ Cluster ya existe y está activo."
+          fi
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
