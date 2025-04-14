@@ -13,7 +13,8 @@
             "protocol": "tcp"
           }
         ],
-        "essential": true
+        "essential": true,
+        "memory": 512
       }
     ],
     "requiresCompatibilities": [
@@ -22,3 +23,4 @@
     "cpu": "256",
     "memory": "512"
   }
+  

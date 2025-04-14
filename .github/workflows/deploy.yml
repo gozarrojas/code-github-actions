@@ -31,32 +31,58 @@ jobs:
 
       - name: Create ECS Cluster (if not exists)
         run: |
-          aws ecs describe-clusters --clusters fastapi-cluster \
-          --region us-east-1 || \
+          aws ecs describe-clusters --clusters fastapi-cluster --region us-east-1 || \
           aws ecs create-cluster --cluster-name fastapi-cluster --region us-east-1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
 
+      - name: Register ECS Task Definition (if not exists or needs update)
+        run: |
+            # Intentar describir la tarea para ver si existe
+            TASK_EXISTS=$(aws ecs describe-task-definition \
+              --task-definition fastapi-task \
+              --region us-east-1 2>/dev/null || echo "MISSING")
+            
+            if [ "$TASK_EXISTS" = "MISSING" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              # Verificar que el JSON es válido antes de registrarlo
+              cat ecs-task-definition.json
+              
+              # Registrar la definición de tarea
+              aws ecs register-task-definition \
+                --cli-input-json file://ecs-task-definition.json \
+                --region us-east-1
+              
+              echo "Task definition registered/updated."
+            else
+              echo "Task definition already exists and no update requested."
+            fi
+        env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_REGION: us-east-1
+
       - name: Create ECS Service (if not exists)
         run: |
           SERVICE_EXISTS=$(aws ecs describe-services \
-            --cluster fastapi-cluster \
-            --services fastapi-service \
-            --region us-east-1 --query "services[0].status" --output text 2>/dev/null || echo "MISSING")
+          --cluster fastapi-cluster \
+          --services fastapi-service \
+          --region us-east-1 \
+          --query "length(services[?status!='INACTIVE'])" \
+          --output text)
 
-          if [ "$SERVICE_EXISTS" = "MISSING" ]; then
-            aws ecs create-service \
-              --cluster fastapi-cluster \
-              --service-name fastapi-service \
-              --task-definition fastapi-task \
-              --desired-count 1 \
-              --launch-type FARGATE \
-              --network-configuration "awsvpcConfiguration={subnets=[subnet-0cbdc6ab45182260a],securityGroups=[sg-0195427339b9d5bff],assignPublicIp=ENABLED}" \
-              --region us-east-1
+          if [ "$SERVICE_EXISTS" = "0" ]; then
+              aws ecs create-service \
+                --cluster fastapi-cluster \
+                --service-name fastapi-service \
+                --task-definition fastapi-task \
+                --desired-count 1 \
+                --launch-type FARGATE \
+                --network-configuration "awsvpcConfiguration={subnets=[subnet-0cbdc6ab45182260a],securityGroups=[sg-0195427339b9d5bff],assignPublicIp=ENABLED}" \
+                --region us-east-1
           else
-            echo "Service already exists."
+              echo "Service already exists."
           fi
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

@@ -1,0 +1,25 @@
+{
+  "family": "fastapi-task",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::137068232726:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "fastapi-container",
+      "image": "gozarrojas/fastapi-api:latest",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "hostPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "memory": 512
+    }
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "512"
+}
