@@ -29,6 +29,41 @@ jobs:
           #push: true
           #tags: gozarrojas/fastapi-api:latest
 
+      - name: Create ecsTaskExecutionRole if it doesn't exist
+        run: |
+            ROLE_EXISTS=$(aws iam get-role --role-name ecsTaskExecutionRole 2>/dev/null || echo "MISSING")
+            
+            if [[ "$ROLE_EXISTS" == "MISSING" ]]; then
+              echo "📌 Rol ecsTaskExecutionRole no existe. Creándolo..."
+  
+              aws iam create-role \
+                --role-name ecsTaskExecutionRole \
+                --assume-role-policy-document '{
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                        "Service": "ecs-tasks.amazonaws.com"
+                      },
+                      "Action": "sts:AssumeRole"
+                    }
+                  ]
+                }'
+  
+              aws iam attach-role-policy \
+                --role-name ecsTaskExecutionRole \
+                --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+              
+              echo "✅ Rol creado y política asociada."
+            else
+              echo "✅ Rol ecsTaskExecutionRole ya existe."
+            fi
+        env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_REGION: us-east-1
+
       - name: Create ECS Cluster (if not exists)
         run: |
           aws ecs describe-clusters --clusters fastapi-cluster --region us-east-1 || \
