@@ -53,7 +53,7 @@ jobs:
               --task-definition fastapi-task \
               --desired-count 1 \
               --launch-type FARGATE \
-              --network-configuration "awsvpcConfiguration={subnets=[subnet-xxxx],securityGroups=[sg-xxxx],assignPublicIp=ENABLED}" \
+              --network-configuration "awsvpcConfiguration={subnets=[subnet-0cbdc6ab45182260a],securityGroups=[sg-0195427339b9d5bff],assignPublicIp=ENABLED}" \
               --region us-east-1
           else
             echo "Service already exists."
