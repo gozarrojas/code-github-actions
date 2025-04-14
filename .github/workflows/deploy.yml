@@ -64,6 +64,25 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_REGION: us-east-1
 
+      - name: Delete cluster if inactive
+        run: |
+              CLUSTER_STATUS=$(aws ecs describe-clusters \
+                --clusters fastapi-cluster \
+                --region us-east-1 \
+                --query "clusters[0].status" \
+                --output text 2>/dev/null || echo "MISSING")
+    
+              if [[ "$CLUSTER_STATUS" == "INACTIVE" ]]; then
+                echo "🧨 Cluster inactivo detectado. Eliminándolo..."
+                aws ecs delete-cluster --cluster fastapi-cluster --region us-east-1
+              else
+                echo "✅ Cluster no está inactivo, o no existe aún."
+              fi
+        env:
+              AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+              AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              AWS_REGION: us-east-1
+
       - name: Create ECS Cluster (if not exists)
         run: |
           aws ecs describe-clusters --clusters fastapi-cluster --region us-east-1 || \
