@@ -1,0 +1,23 @@
+{
+    "serviceName": "fastapi-service",
+    "taskDefinition": "fastapi-task",
+    "desiredCount": 1,
+    "launchType": "FARGATE",
+    "platformVersion": "LATEST",
+    "networkConfiguration": {
+      "awsvpcConfiguration": {
+        "subnets": [
+          "subnet-0cbdc6ab45182260a" 
+        ],
+        "securityGroups": [
+          "sg-0195427339b9d5bff" 
+        ],
+        "assignPublicIp": "ENABLED"
+      }
+    },
+    "loadBalancers": [],
+    "deploymentConfiguration": {
+      "maximumPercent": 200,
+      "minimumHealthyPercent": 100
+    }
+  }
