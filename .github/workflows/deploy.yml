@@ -75,6 +75,8 @@ jobs:
               if [[ "$CLUSTER_STATUS" == "INACTIVE" ]]; then
                 echo "🧨 Cluster inactivo detectado. Eliminándolo..."
                 aws ecs delete-cluster --cluster fastapi-cluster --region us-east-1
+                echo "⏳ Esperando 10 segundos para asegurar eliminación..."
+                sleep 10
               else
                 echo "✅ Cluster no está inactivo, o no existe aún."
               fi
